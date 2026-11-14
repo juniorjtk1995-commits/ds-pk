@@ -1,0 +1,8 @@
+/*
+ * Mirrors a consumer app's globals.css, but points at the library source
+ * (../../../src) instead of node_modules/ds-pk/dist.
+ */
+@import "tailwindcss";
+@import "../../../src/styles/theme.css";
+@source "../../../src";
+@source "../src";

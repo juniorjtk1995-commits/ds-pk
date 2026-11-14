@@ -10,22 +10,30 @@ npm names must be lowercase, so the published name is `ds-pk` (the project is ca
 
 ## Stack
 
-- pnpm (version pinned in `packageManager`), single package at the repo root. `pnpm-workspace.yaml` exists only for `allowBuilds`: pnpm blocks dependency install scripts unless they are approved with `pnpm approve-builds <pkg>`.
+- pnpm workspace (version pinned in `packageManager`). The published library `ds-pk` is the **repo root** package; `apps/storybook` (`@ds-pk/storybook`, private) is the only other member. `pnpm-workspace.yaml` also holds `allowBuilds`: pnpm blocks dependency install scripts unless they are approved with `pnpm approve-builds <pkg>`.
+- Dependencies used only by Storybook (`storybook`, `@storybook/*`, `@tailwindcss/vite`, `vite`) belong in `apps/storybook/package.json`, not in the library's.
 - ESM-only output (`"type": "module"`). `pnpm build` runs tsup to transpile JS, then `tsc -p tsconfig.build.json` to emit `.d.ts` beside it.
 - Tailwind CSS v4, CSS-first config (`@theme` in CSS, no `tailwind.config.js`).
 - Storybook (`.storybook/`, React + Vite) to preview and document components; Vitest + React Testing Library + jsdom for tests.
 - TypeScript is pinned to v6 because typescript-eslint does not support TS 7 yet. Keep the pin until it does.
 
-Use the scripts in `package.json` for build, lint, typecheck, test, and Storybook. To run one test file: `pnpm vitest run path/to/file.test.tsx`; to run one test by name, add `-t "<name>"`. `pnpm check:package` runs publint against the packed tarball.
+Use the scripts in `package.json` for build, lint, typecheck, test, and Storybook. Run them from the repo root: `pnpm storybook` and `pnpm build-storybook` forward to `apps/storybook`. The root `pnpm typecheck` covers only the library, so after touching stories also run `pnpm --filter @ds-pk/storybook typecheck`. `pnpm lint` covers both. To run one test file: `pnpm vitest run path/to/file.test.tsx`; to run one test by name, add `-t "<name>"`. `pnpm check:package` runs publint against the packed tarball.
 
 Relative imports in `src/` use the `.js` extension (`import { cn } from "../../lib/utils.js"`). Output is unbundled ESM, so those paths ship as written, and Next.js resolves ESM packages fully specified. `"moduleResolution": "NodeNext"` makes `pnpm typecheck` fail on a missing extension.
 
 ## Architecture
 
-- `src/components/<name>/`: one folder per component, holding the component and its `*.test.tsx` (stories go here too once Storybook work starts). Each component is re-exported from `src/index.ts`, which is the package's public API. Anything not exported there is private.
+- `src/components/<name>/`: one folder per component, holding the component and its `*.test.tsx`. Each component is re-exported from `src/index.ts`, which is the package's public API. Anything not exported there is private.
 - `src/lib/utils.ts` re-exports `cn()` from the `cn` npm package (a drop-in replacement for clsx + tailwind-merge). Components import it from there, never from `"cn"` directly. Every component merges `className` through it, so consumer overrides win.
 - `src/styles/theme.css`: the app's design tokens as CSS variables (`:root` and `.dark`) mapped into Tailwind with `@theme inline`, plus the `dark` custom variant and base border/background/font styles. Font variables (`--font-sans`, `--font-heading`) are left to the consumer, who sets them through `next/font`. The tsup `onSuccess` hook copies the file to `dist/theme.css`, published as `ds-pk/theme.css`.
-- `.storybook/` is configured, but no stories exist yet. `preview.css` wires up Tailwind the way a consumer does, except that it scans `src/` instead of `dist/`. The toolbar's Theme switch toggles `.dark`.
+
+### Storybook (`apps/storybook`)
+
+- Stories live in `apps/storybook/src/<component>.stories.tsx` and import from `"ds-pk"`, as a consumer would. `.storybook/main.ts` aliases `"ds-pk"` to the library's `src/index.ts` (and `tsconfig.json` `paths` mirrors it), so stories run against source with instant reloads and no `pnpm build` needed. A component missing from `src/index.ts` can't be imported in a story.
+- `.storybook/preview.css` wires up Tailwind like a consumer's `globals.css`, but imports `src/styles/theme.css` and scans `src/` and the stories instead of `dist/`.
+- The toolbar's Theme switch toggles `.dark` on `<html>`, as next-themes does in the app. Fonts are not loaded, so text uses Tailwind's default sans stack, not the app's Inter.
+- Each component gets `tags: ["autodocs"]` (Docs page with the prop table) and `argTypes` with controls. react-docgen can't resolve cva `VariantProps` or Base UI prop types and shows them as `unknown`, so spell out `table.type.summary` for `variant`, `size` and other such props.
+- Write one story per meaningful state (`Disabled`, `Invalid` via `aria-invalid`, `Expanded` via `aria-expanded`, render-prop usage) so props and states can be checked visually. There are no play-function or a11y tests.
 
 ### How styles reach consumers
 

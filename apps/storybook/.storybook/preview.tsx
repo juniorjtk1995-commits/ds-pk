@@ -16,17 +16,19 @@ const preview: Preview = {
   },
   initialGlobals: { theme: "light" },
   decorators: [
-    (Story, context) => (
-      <div
-        className={
-          context.globals.theme === "dark"
-            ? "dark bg-background p-6 text-foreground"
-            : "bg-background p-6 text-foreground"
-        }
-      >
-        <Story />
-      </div>
-    ),
+    (Story, context) => {
+      // Toggle .dark on <html>, as next-themes does in a consumer app, so the
+      // whole canvas (body bg from theme.css) switches, not just a wrapper.
+      document.documentElement.classList.toggle(
+        "dark",
+        context.globals.theme === "dark",
+      );
+      return (
+        <div className="p-6">
+          <Story />
+        </div>
+      );
+    },
   ],
 };
 

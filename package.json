@@ -25,8 +25,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
+    "storybook": "pnpm --filter @ds-pk/storybook storybook",
+    "build-storybook": "pnpm --filter @ds-pk/storybook build-storybook",
     "check:package": "publint",
     "prepublishOnly": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:package"
   },
@@ -43,8 +43,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@storybook/react-vite": "^10.6.7",
-    "@tailwindcss/vite": "^4.3.5",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -60,7 +58,6 @@
     "publint": "^0.3.25",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "storybook": "^10.6.7",
     "tailwindcss": "^4.3.5",
     "tsup": "^9.0.0",
     "typescript": "^6.0.3",
