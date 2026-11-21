@@ -65,6 +65,7 @@ What follows from this:
 - Put a `data-slot="<part>"` attribute on each rendered part, as current shadcn/ui does, so consumers can target parts from CSS.
 - Define variants with `cva` and export the variants function next to the component (`buttonVariants`, `textFieldInputVariants`) so consumers can style other elements the same way.
 - When porting a component from the app, keep its props, classes and `data-slot`s identical, and change only imports: `cn` from `../../lib/utils.js`, never an app path such as `@/components` or a Next-only module such as `next/image`. Components that depend on something that stays in the app (Card, ProductCard, ThemeProvider) stay in the app.
+- Before using or changing `Button`, read `src/components/button/button.md`: it documents the props, variants, sizes, icon handling and the `render` prop. When you change `button.tsx` (a prop, variant, size or `data-slot`), update `button.md` in the same change.
 
 ## Publishing
 
